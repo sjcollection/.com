@@ -1,6 +1,6 @@
 // Keep your API setup as requested
-const SHEET_ID = '1oW79hYLrhHLHUHB5jI7ytjCbWkzh-wYrllulRgBc6Yg';
-const API_KEY = 'AIzaSyDkH1zxQegLXZNktHU2pXWDu0TA539RoSw';
+const SHEET_ID = '1FfhN47psQiWAEUzNYpowfOZiHYC7a38MdiFUrVRBb8Y';
+const API_KEY = 'AIzaSyDbPZ-hFkQuEISkMPzkTlaT2MHY1DhPbvE';
 
 const norm = (v) => String(v ?? '').trim();
 const lower = (v) => norm(v).toLowerCase();
