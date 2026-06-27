@@ -114,6 +114,13 @@ body{
   object-fit:cover;
 }
 
+/* LIST browse cards same as ACCESS cards (fix) */
+.list-grid .category-card .card-image{
+  aspect-ratio:1/1;
+  height:auto;
+  object-fit:cover;
+}
+
 /* CATEGORY/LIST posters portrait */
 .content-grid .content-card .card-image,
 .list-grid .content-card .card-image{
