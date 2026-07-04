@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Buy Access - SJ's Collection Hub</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" type="image/png" href="logo.png" />
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="logo">SJ's Collection Hub</div>
+      <ul class="nav-menu">
+        <li><a href="index.html">MORE ACCESS</a></li>
+        <li><a href="list.html">MORE LIST</a></li>
+        <li><a href="trial.html">TRIAL</a></li>
+        <li><a href="buy.html" class="active">BUY ACCESS</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <section class="content">
+    <div class="container">
+      <h2 class="section-title">Buy Access</h2>
+      <div class="grid buy-grid" id="buyGrid"></div>
+    </div>
+  </section>
+
+  <div id="buyModal" class="modal" style="display:none;">
+    <div class="trial-modal-box">
+      <button class="close-btn" onclick="closeBuyModal()">×</button>
+
+      <div class="trial-layout">
+        <img id="buyPicture" class="trial-image" alt="Buy Access" />
+
+        <div>
+          <h2 id="buyTitle"></h2>
+          <p id="buyShortDescription"></p>
+
+          <div class="warning">
+            <strong>BUY ACCESS</strong>
+            <p id="buyFullDescription"></p>
+          </div>
+
+          <a
+            id="buyAccessBtn"
+            class="buy-btn"
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            BUY ACCESS 99
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2026 SJ's Collection Hub. All Rights Reserved.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
