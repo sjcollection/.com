@@ -38,9 +38,11 @@ window.resetListViewAndGoList = resetListViewAndGoList;
 function bindListNavReset() {
   document.querySelectorAll('.nav-menu a').forEach((a) => {
     const txt = a.textContent.trim().toUpperCase();
+
     if (txt === 'MORE LIST') {
       a.addEventListener('click', resetListViewAndGoList);
     }
+
     if (txt === 'MORE ACCESS') {
       a.addEventListener('click', () => {
         sessionStorage.removeItem('selectedListView');
@@ -51,14 +53,13 @@ function bindListNavReset() {
 }
 
 /* =========================
-   BUILT-IN PIN MODULE (NO CSS INJECTION)
-   - Saved PIN is PER CATEGORY
-   - Eye button show/hide PIN
+   BUILT-IN PIN MODULE
    ========================= */
 const PIN_SAVE_KEY_PREFIX = 'sj_saved_pin_';
 let PIN_CACHE = [];
 let pinCurrentCategory = '';
 let pinSuccessCallback = null;
+let pinUiReady = false;
 
 function ensurePinMarkup() {
   if (document.getElementById('pinOverlay')) return;
@@ -69,14 +70,29 @@ function ensurePinMarkup() {
       <div class="pin-modal" role="dialog" aria-modal="true" aria-labelledby="pinTitle">
         <div class="pin-head">
           <h3 id="pinTitle" class="pin-title">Enter Access PIN</h3>
-          <button id="pinCloseBtn" class="pin-close" type="button" aria-label="Close">×</button>
+          <button id="pinCloseBtn" class="pin-close" type="button" aria-label="Close">&times;</button>
         </div>
+
         <p class="pin-sub">Please enter your 4-digit PIN to continue.</p>
         <div id="pinCategoryLabel" class="pin-category">CATEGORY</div>
 
         <div class="pin-input-wrap">
-          <input id="pinInput" class="pin-input" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off" />
-          <button id="pinToggleBtn" class="pin-toggle" type="button" aria-label="Show PIN" title="Show PIN">👁️</button>
+          <input
+            id="pinInput"
+            class="pin-input"
+            type="password"
+            inputmode="numeric"
+            maxlength="4"
+            placeholder="••••"
+            autocomplete="off"
+          />
+          <button
+            id="pinToggleBtn"
+            class="pin-toggle"
+            type="button"
+            aria-label="Show PIN"
+            title="Show PIN"
+          >&#128065;&#65039;</button>
         </div>
 
         <div class="pin-row">
@@ -127,6 +143,7 @@ function shakePin() {
 
 async function loadPinSheet() {
   if (PIN_CACHE.length) return PIN_CACHE;
+
   const rows = await fetchSheetData('PIN', 'A:B');
   PIN_CACHE = rows
     .map((r) => ({
@@ -134,6 +151,7 @@ async function loadPinSheet() {
       pin: norm(r[1])
     }))
     .filter((x) => x.category && x.pin);
+
   return PIN_CACHE;
 }
 
@@ -156,12 +174,23 @@ function clearSavedPin(categoryName) {
   localStorage.removeItem(PIN_SAVE_KEY_PREFIX + lower(categoryName));
 }
 
+function setPinToggleState(isVisible) {
+  const btn = pinEl('pinToggleBtn');
+  if (!btn) return;
+
+  btn.innerHTML = isVisible ? '&#128584;' : '&#128065;&#65039;';
+  btn.setAttribute('aria-label', isVisible ? 'Hide PIN' : 'Show PIN');
+  btn.setAttribute('title', isVisible ? 'Hide PIN' : 'Show PIN');
+}
+
 function closePinModal() {
   const ov = pinEl('pinOverlay');
   if (!ov) return;
+
   ov.classList.remove('show');
   ov.setAttribute('aria-hidden', 'true');
   clearPinMsg();
+
   pinCurrentCategory = '';
   pinSuccessCallback = null;
 }
@@ -170,27 +199,24 @@ function openPinModal(categoryName, onSuccess) {
   pinCurrentCategory = categoryName;
   pinSuccessCallback = onSuccess;
 
-  pinEl('pinCategoryLabel').textContent = categoryName.toUpperCase();
+  const label = pinEl('pinCategoryLabel');
+  const input = pinEl('pinInput');
+  const remember = pinEl('pinRemember');
+  const ov = pinEl('pinOverlay');
+
+  label.textContent = categoryName.toUpperCase();
 
   const saved = getSavedPin(categoryName);
-  const input = pinEl('pinInput');
-  const toggle = pinEl('pinToggleBtn');
-
   input.type = 'password';
   input.value = saved;
-  pinEl('pinRemember').checked = !!saved;
+  remember.checked = !!saved;
 
-  if (toggle) {
-    toggle.textContent = '👁️';
-    toggle.setAttribute('aria-label', 'Show PIN');
-    toggle.setAttribute('title', 'Show PIN');
-  }
-
+  setPinToggleState(false);
   clearPinMsg();
 
-  const ov = pinEl('pinOverlay');
   ov.classList.add('show');
   ov.setAttribute('aria-hidden', 'false');
+
   setTimeout(() => input.focus(), 20);
 }
 
@@ -253,6 +279,9 @@ async function requireCategoryPin(categoryName, onSuccess) {
 }
 
 function initPinUI() {
+  if (pinUiReady) return;
+  pinUiReady = true;
+
   ensurePinMarkup();
 
   pinEl('pinCloseBtn').addEventListener('click', closePinModal);
@@ -273,12 +302,11 @@ function initPinUI() {
 
   pinEl('pinToggleBtn').addEventListener('click', () => {
     const input = pinEl('pinInput');
-    const btn = pinEl('pinToggleBtn');
     const isHidden = input.type === 'password';
+
     input.type = isHidden ? 'text' : 'password';
-    btn.textContent = isHidden ? '🙈' : '👁️';
-    btn.setAttribute('aria-label', isHidden ? 'Hide PIN' : 'Show PIN');
-    btn.setAttribute('title', isHidden ? 'Hide PIN' : 'Show PIN');
+    setPinToggleState(isHidden);
+    input.focus();
   });
 }
 
@@ -286,9 +314,6 @@ function initPinUI() {
    MAIN APP
    ========================= */
 
-// INDEX (grouped sections in one page from CATEGORIES col E)
-// PIN lock only applied here before entering category
-// CATEGORIES col F = image mode (2 = landscape on category page, else normal)
 async function loadCategories() {
   const grid = document.getElementById('categoriesGrid');
   if (!grid) return;
@@ -340,7 +365,7 @@ async function loadCategories() {
         <div class="card-content">
           <h3 class="card-title">${x.title}</h3>
           <p class="card-description">${x.desc || ''}</p>
-          <button class="card-button">ACCESS🔐</button>
+          <button class="card-button">ACCESS 🔐</button>
         </div>
       `;
 
@@ -360,8 +385,6 @@ async function loadCategories() {
   });
 }
 
-// CATEGORY
-// ACCESS col F = meta/status/year text (optional)
 async function loadCategoryPage() {
   const grid = document.getElementById('contentGrid');
   if (!grid) return;
@@ -381,13 +404,15 @@ async function loadCategoryPage() {
       title: norm(r[2]),
       type: lower(r[3]),
       pic: norm(r[4]),
-      meta: norm(r[5]) // year / COMPLETE / ONGOING / empty
+      meta: norm(r[5])
     }))
     .filter((x) => lower(x.category) === lower(selected) && x.id && x.title);
 
-  const uniq = [...new Map(items.map((i) => [i.id, i])).values()].sort((a, b) => a.title.localeCompare(b.title));
+  const uniq = [...new Map(items.map((i) => [i.id, i])).values()]
+    .sort((a, b) => a.title.localeCompare(b.title));
 
   grid.innerHTML = '';
+
   const groups = {};
   uniq.forEach((i) => {
     const k = (i.title[0] || '#').toUpperCase();
@@ -431,7 +456,7 @@ async function loadCategoryPage() {
   });
 }
 
-// DETAILS
+/* DETAILS */
 let movieLink = '';
 let gameLink = '';
 let bookLink = '';
@@ -496,7 +521,8 @@ async function loadDetailsPage() {
     seasonsContainer.style.display = 'block';
 
     const seasons = [...new Set(
-      db.filter((r) => norm(r[1]) === id && lower(r[3]) === 'series')
+      db
+        .filter((r) => norm(r[1]) === id && lower(r[3]) === 'series')
         .map((r) => parseInt(norm(r[4]), 10))
         .filter((n) => !Number.isNaN(n) && n > 0)
     )].sort((a, b) => a - b);
@@ -507,18 +533,23 @@ async function loadDetailsPage() {
     seasons.forEach((s) => {
       const b = document.createElement('button');
       b.textContent = `Season ${s}`;
+
       b.onclick = () => {
         document.querySelectorAll('#seasonsList button').forEach((x) => x.classList.remove('active'));
         b.classList.add('active');
 
         const eps = db
           .filter((r) => norm(r[1]) === id && parseInt(norm(r[4]), 10) === s)
-          .map((r) => ({ ep: parseInt(norm(r[5]), 10), link: norm(r[6]) }))
+          .map((r) => ({
+            ep: parseInt(norm(r[5]), 10),
+            link: norm(r[6])
+          }))
           .filter((x) => !Number.isNaN(x.ep) && x.ep > 0 && x.link)
           .sort((a, b) => a.ep - b.ep);
 
         const eBox = document.getElementById('episodesContainer');
         const eList = document.getElementById('episodesList');
+
         eBox.style.display = 'block';
         eList.innerHTML = '';
 
@@ -529,6 +560,7 @@ async function loadDetailsPage() {
           eList.appendChild(eb);
         });
       };
+
       sList.appendChild(b);
     });
 
@@ -546,9 +578,7 @@ function playMovie() {
 }
 window.playMovie = playMovie;
 
-// LIST (grouped sections from LIST col E) - NO PIN LOCK HERE
-// LIST col F = image mode (2 = landscape on list detail view, else normal)
-// ACCESS col F = meta/status/year text
+/* LIST */
 async function loadListPage() {
   const grid = document.getElementById('listGrid');
   const title = document.getElementById('listTitle');
@@ -569,7 +599,7 @@ async function loadListPage() {
         desc: norm(r[2]),
         pic: norm(r[3]),
         group: norm(r[4]),
-        imageMode: norm(r[5]) || '1' // LIST col F
+        imageMode: norm(r[5]) || '1'
       }))
       .filter((x) => x.id && x.title && x.group);
 
@@ -608,7 +638,7 @@ async function loadListPage() {
           <div class="card-content">
             <h3 class="card-title">${x.title}</h3>
             <p class="card-description">${x.desc || ''}</p>
-            <button class="card-button">CHECK LIST👀</button>
+            <button class="card-button">CHECK LIST 👀</button>
           </div>
         `;
 
@@ -617,7 +647,7 @@ async function loadListPage() {
 
         c.querySelector('button').onclick = () => {
           sessionStorage.setItem('selectedListView', x.title);
-          sessionStorage.setItem('selectedListImageMode', x.imageMode); // save LIST col F mode
+          sessionStorage.setItem('selectedListImageMode', x.imageMode);
           location.reload();
         };
 
@@ -629,8 +659,8 @@ async function loadListPage() {
   }
 
   title.textContent = chosen;
-  const rows = await fetchSheetData('ACCESS', 'A:F');
 
+  const rows = await fetchSheetData('ACCESS', 'A:F');
   const items = rows
     .map((r) => ({
       category: norm(r[0]),
@@ -638,13 +668,15 @@ async function loadListPage() {
       title: norm(r[2]),
       type: lower(r[3]),
       pic: norm(r[4]),
-      meta: norm(r[5]) // year / COMPLETE / ONGOING / empty
+      meta: norm(r[5])
     }))
     .filter((x) => lower(x.category) === lower(chosen) && x.id && x.title);
 
-  const uniq = [...new Map(items.map((i) => [i.id, i])).values()].sort((a, b) => a.title.localeCompare(b.title));
+  const uniq = [...new Map(items.map((i) => [i.id, i])).values()]
+    .sort((a, b) => a.title.localeCompare(b.title));
 
   grid.innerHTML = '';
+
   const groups = {};
   uniq.forEach((i) => {
     const k = (i.title[0] || '#').toUpperCase();
@@ -679,7 +711,7 @@ async function loadListPage() {
   });
 }
 
-// TRIAL
+/* TRIAL */
 let trialVideoLink = '';
 
 function openTrialModal(data) {
@@ -713,7 +745,14 @@ async function loadTrialPage() {
   grid.innerHTML = '';
 
   rows.forEach((r) => {
-    const id = norm(r[0]), title = norm(r[1]), desc = norm(r[2]), pic = norm(r[3]), link = norm(r[4]), warn = norm(r[5]), buy = norm(r[6]);
+    const id = norm(r[0]);
+    const title = norm(r[1]);
+    const desc = norm(r[2]);
+    const pic = norm(r[3]);
+    const link = norm(r[4]);
+    const warn = norm(r[5]);
+    const buy = norm(r[6]);
+
     if (!id || !title || !pic) return;
 
     const c = document.createElement('div');
@@ -752,24 +791,7 @@ function closeTrialModal() {
 window.playTrialVideo = playTrialVideo;
 window.closeTrialModal = closeTrialModal;
 
-window.addEventListener('click', (e) => {
-  const modal = document.getElementById('trialModal');
-  if (modal && e.target === modal) closeTrialModal();
-});
-
-// BOOT
-document.addEventListener('DOMContentLoaded', () => {
-  bindListNavReset();
-  initPinUI();
-
-  if (document.getElementById('categoriesGrid')) loadCategories();
-  if (document.getElementById('contentGrid')) loadCategoryPage();
-  if (document.getElementById('detailsPoster')) loadDetailsPage();
-  if (document.getElementById('listGrid')) loadListPage();
-  if (document.getElementById('trialGrid')) loadTrialPage();
-});
-
-// BUY ACCESS
+/* BUY ACCESS */
 let buyAccessLink = '';
 
 function openBuyModal(data) {
@@ -871,7 +893,16 @@ function closeBuyModal() {
 
 window.closeBuyModal = closeBuyModal;
 
-// BOOT
+/* MODAL BACKDROP CLOSE */
+window.addEventListener('click', (e) => {
+  const trialModal = document.getElementById('trialModal');
+  if (trialModal && e.target === trialModal) closeTrialModal();
+
+  const buyModal = document.getElementById('buyModal');
+  if (buyModal && e.target === buyModal) closeBuyModal();
+});
+
+/* BOOT - only one boot section */
 document.addEventListener('DOMContentLoaded', () => {
   bindListNavReset();
   initPinUI();
