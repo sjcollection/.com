@@ -625,3 +625,52 @@ body{
   background: rgba(193,92,255,.16);
   color: #fff;
 }
+
+/* ===== BUY modal overflow + X fix ===== */
+#buyModal .trial-modal-box{
+  position: relative;
+  max-width: min(1100px, 94vw);
+  width: 94vw;
+  max-height: 90vh;
+  overflow: auto;              /* allow scroll inside modal if content is long */
+}
+
+#buyModal .trial-layout{
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+#buyModal .close-btn{
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 20;
+}
+
+/* important: wrap very long strings/URLs */
+#buyModal #buyShortDescription,
+#buyModal #buyFullDescription,
+#buyModal .warning,
+#buyModal .warning p{
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* keep buttons aligned even with long text above */
+#buyModal .buy-actions{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+/* responsive */
+@media (max-width: 900px){
+  #buyModal .trial-layout{
+    grid-template-columns: 1fr;
+  }
+}
