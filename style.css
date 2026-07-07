@@ -589,3 +589,39 @@ body{
     animation:none !important;
   }
 }
+
+/* BUY modal buttons aligned */
+#buyModal .buy-actions{
+  display: flex;
+  align-items: center;   /* vertical align fix */
+  gap: 12px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+#buyModal .buy-actions .buy-btn,
+#buyModal .buy-actions .back-btn{
+  height: 44px;          /* same height */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;       /* same side padding */
+  line-height: 1;        /* prevents text pushing up/down */
+  box-sizing: border-box;
+  margin: 0;             /* remove default button margin */
+}
+
+/* back style only */
+#buyModal .buy-actions .back-btn{
+  border-radius: 10px;
+  border: 1px solid rgba(193,92,255,.55);
+  background: transparent;
+  color: #d9c5ff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#buyModal .buy-actions .back-btn:hover{
+  background: rgba(193,92,255,.16);
+  color: #fff;
+}
